@@ -18,11 +18,15 @@
 
 ## 🖼️ Screenshots
 
-| Home Page | Quiz Room | Results |
-|------------|------------|---------|
-| ![Home](./assets/home.png) | ![Quiz](./assets/quiz.png) | ![Results](./assets/results.png) |
-
-> 💡 Tip: Place your screenshots in a folder named `/assets` at the root of the repo and update the paths above accordingly.
+(assets/readme/1st.png)
+(assets/readme/2nd.png)
+(assets/readme/3rd.png)
+(assets/readme/4th.png)
+(assets/readme/5th.png)
+(assets/readme/6th.png)
+(assets/readme/7th.png)
+(assets/readme/8th.png)
+(assets/readme/9th.png)
 
 ---
 
