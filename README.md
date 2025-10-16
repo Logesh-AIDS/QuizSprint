@@ -18,15 +18,15 @@
 
 ## 🖼️ Screenshots
 
-(assets/readme/1st.png)
-(assets/readme/2nd.png)
-(assets/readme/3rd.png)
-(assets/readme/4th.png)
-(assets/readme/5th.png)
-(assets/readme/6th.png)
-(assets/readme/7th.png)
-(assets/readme/8th.png)
-(assets/readme/9th.png)
+(photos/1st.png)
+(photos/readme/2nd.png)
+(photos/readme/3rd.png)
+(photos/readme/4th.png)
+(photos/readme/5th.png)
+(photos/readme/6th.png)
+(photos/readme/7th.png)
+(photos/readme/8th.png)
+(photos/readme/9th.png)
 
 > 💡 Tip: Place your screenshots in a folder named `/assets` at the root of the repo and update the paths above accordingly.
 
