@@ -46,8 +46,8 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const baseHttp = (import.meta as any).env?.VITE_WS_URL || window.location.origin;
+    const wsUrl = baseHttp.replace(/^http(s?):/, (_m: string, s: string) => (s ? "wss:" : "ws:")) + "/ws";
 
     const connect = () => {
       const ws = new WebSocket(wsUrl);
