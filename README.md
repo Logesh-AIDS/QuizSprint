@@ -16,16 +16,19 @@
 
 ---
 
+
+
 ## 🖼️ Screenshots
 
-(photos/1st.png)
-(photos/readme/2nd.png)
-(photos/readme/3rd.png)
-(photos/readme/4th.png)
-(photos/readme/5th.png)
-(photos/readme/6th.png)
-(photos/readme/7th.png)
-(photos/readme/8th.png)
-(photos/readme/9th.png)
+![Quiz Page 1](photos/1st.png)
+![Quiz Page 2](photos/readme/2nd.png)
+![Quiz Page 3](photos/readme/3rd.png)
+![Quiz Page 4](photos/readme/4th.png)
+![Quiz Page 5](photos/readme/5th.png)
+![Quiz Page 6](photos/readme/6th.png)
+![Quiz Page 7](photos/readme/7th.png)
+![Quiz Page 8](photos/readme/8th.png)
+![Quiz Page 9](photos/readme/9th.png)
+
 
 > 💡 Tip: Place your screenshots in a folder named `/assets` at the root of the repo and update the paths above accordingly.
