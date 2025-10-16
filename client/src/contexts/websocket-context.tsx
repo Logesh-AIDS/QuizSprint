@@ -46,7 +46,9 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const baseHttp = (import.meta as any).env?.VITE_WS_URL || window.location.origin;
+    const isProd = (import.meta as any).env?.PROD === true;
+    const envUrl = (import.meta as any).env?.VITE_WS_URL as string | undefined;
+    const baseHttp = isProd && envUrl ? envUrl : window.location.origin;
     const wsUrl = baseHttp.replace(/^http(s?):/, (_m: string, s: string) => (s ? "wss:" : "ws:")) + "/ws";
 
     const connect = () => {
