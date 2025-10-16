@@ -26,6 +26,9 @@ export interface IStorage {
   getChatMessages(roomId: string): Promise<ChatMessage[]>;
   addChatMessage(message: ChatMessage): Promise<void>;
   clearChatMessages(roomId: string): Promise<void>;
+
+  // Resets
+  resetScoresAndStreaks(roomId: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -153,6 +156,14 @@ export class MemStorage implements IStorage {
 
   async clearChatMessages(roomId: string): Promise<void> {
     this.chatMessages.delete(roomId);
+  }
+
+  async resetScoresAndStreaks(roomId: string): Promise<void> {
+    const players = await this.getPlayersByRoom(roomId);
+    for (const player of players) {
+      this.players.set(player.id, { ...player, score: 0, streak: 0 });
+    }
+    await this.clearAnswers(roomId);
   }
 }
 

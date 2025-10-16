@@ -215,6 +215,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
             break;
           }
 
+          case 'restart_quiz': {
+            if (!currentPlayerId || !currentRoomId) return;
+
+            // Reset player scores/streaks and clear answers
+            await storage.resetScoresAndStreaks(currentRoomId);
+
+            // Reset room state to start from first question with SAME set if available
+            const questions = roomQuestions.get(currentRoomId);
+            if (!questions || questions.length === 0) {
+              // If for some reason questions are missing, reinitialize from SAMPLE_QUESTIONS like start_game
+              const shuffled = [...SAMPLE_QUESTIONS].sort(() => Math.random() - 0.5);
+              const gameQuestions = shuffled.slice(0, 10);
+              roomQuestions.set(currentRoomId, gameQuestions);
+            }
+
+            await storage.updateRoom(currentRoomId, { status: 'playing', currentQuestion: 0 });
+
+            // Broadcast updated scores
+            await broadcastToRoom(currentRoomId, {
+              type: 'update_scores',
+              payload: { players: await storage.getPlayersByRoom(currentRoomId) }
+            });
+
+            // Send first question again
+            await sendQuestion(currentRoomId, 0);
+
+            break;
+          }
+
           case 'send_emoji': {
             if (!currentPlayerId || !currentRoomId) return;
 

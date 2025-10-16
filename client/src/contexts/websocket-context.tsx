@@ -24,12 +24,15 @@ interface WebSocketContextType {
   submitAnswer: (questionId: number, selectedAnswer: number, timeTaken: number) => void;
   sendEmoji: (emoji: string) => void;
   leaveRoom: () => void;
+  restartQuiz: () => void;
+  resetState: () => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
 
 export function WebSocketProvider({ children }: { children: ReactNode }) {
   const wsRef = useRef<WebSocket | null>(null);
+  const pendingMessagesRef = useRef<WSMessage[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [currentRoom, setCurrentRoom] = useState<Room | null>(null);
@@ -45,16 +48,23 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws`;
-    
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
 
-    ws.onopen = () => {
-      setIsConnected(true);
-      setError(null);
-    };
+    const connect = () => {
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
 
-    ws.onmessage = (event) => {
+      ws.onopen = () => {
+        setIsConnected(true);
+        setError(null);
+        // flush queued messages
+        const queued = pendingMessagesRef.current;
+        pendingMessagesRef.current = [];
+        for (const msg of queued) {
+          try { ws.send(JSON.stringify(msg)); } catch {}
+        }
+      };
+
+      ws.onmessage = (event) => {
       try {
         const message: WSMessage = JSON.parse(event.data);
 
@@ -99,27 +109,41 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
       } catch (err) {
         console.error('WebSocket message error:', err);
       }
+      };
+
+      ws.onerror = (event) => {
+        console.error('WebSocket error:', event);
+        setError('Connection error');
+      };
+
+      ws.onclose = () => {
+        setIsConnected(false);
+        // attempt reconnect with small delay
+        setTimeout(() => {
+          if (wsRef.current === ws) {
+            connect();
+          }
+        }, 1000);
+      };
     };
 
-    ws.onerror = (event) => {
-      console.error('WebSocket error:', event);
-      setError('Connection error');
-    };
-
-    ws.onclose = () => {
-      setIsConnected(false);
-    };
+    connect();
 
     return () => {
-      if (ws.readyState === WebSocket.OPEN) {
+      const ws = wsRef.current;
+      if (ws && ws.readyState === WebSocket.OPEN) {
         ws.close();
       }
     };
   }, []);
 
   const sendMessage = useCallback((message: WSMessage) => {
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify(message));
+    const ws = wsRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(message));
+    } else {
+      // queue message to send on reconnect
+      pendingMessagesRef.current.push(message);
     }
   }, []);
 
@@ -165,6 +189,26 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     });
   }, [sendMessage]);
 
+  const restartQuiz = useCallback(() => {
+    sendMessage({
+      type: 'restart_quiz',
+      payload: {}
+    });
+  }, [sendMessage]);
+
+  const resetState = useCallback(() => {
+    setCurrentPlayer(null);
+    setCurrentRoom(null);
+    setPlayers([]);
+    setChatMessages([]);
+    setCurrentQuestion(null);
+    setQuestionNumber(0);
+    setTotalQuestions(0);
+    setAnswerResult(null);
+    setGameFinished(false);
+    setError(null);
+  }, []);
+
   const value = {
     isConnected,
     currentPlayer,
@@ -183,6 +227,8 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     submitAnswer,
     sendEmoji,
     leaveRoom,
+    restartQuiz,
+    resetState,
   };
 
   return (

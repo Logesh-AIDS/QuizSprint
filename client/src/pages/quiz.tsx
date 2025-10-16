@@ -37,12 +37,12 @@ export default function Quiz() {
     }
   }, [gameFinished, roomCode, setLocation]);
 
-  // Show feedback when answer result arrives
+  // Show feedback when answer result arrives and only if user has answered or timed out
   useEffect(() => {
-    if (answerResult) {
+    if (answerResult && isAnswered) {
       setShowFeedback(true);
     }
-  }, [answerResult]);
+  }, [answerResult, isAnswered]);
 
   // Reset for new question
   useEffect(() => {
@@ -108,6 +108,7 @@ export default function Quiz() {
           <div className="lg:col-span-2 space-y-6">
             {/* Timer */}
             <TimerBar
+              key={currentQuestion.id}
               duration={currentQuestion?.timeLimit || 15}
               onTimeout={handleTimeout}
               isRunning={!isAnswered}

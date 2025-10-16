@@ -17,6 +17,8 @@ export function TimerBar({ duration, onTimeout, isRunning = true }: TimerBarProp
 
   useEffect(() => {
     if (!isRunning) return;
+    // Reset timer whenever it starts running
+    setTimeLeft(duration);
 
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
@@ -30,7 +32,7 @@ export function TimerBar({ duration, onTimeout, isRunning = true }: TimerBarProp
     }, 100);
 
     return () => clearInterval(interval);
-  }, [isRunning, onTimeout]);
+  }, [isRunning, duration, onTimeout]);
 
   const percentage = (timeLeft / duration) * 100;
   const isWarning = timeLeft < duration * 0.3;

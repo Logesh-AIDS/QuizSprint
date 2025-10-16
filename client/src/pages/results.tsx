@@ -3,7 +3,8 @@ import { useRoute, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PlayerCard } from "@/components/player-card";
-import { Trophy, RotateCcw, Home, Share2, Loader2 } from "lucide-react";
+import { Trophy, RotateCcw, Home, Camera, Loader2 } from "lucide-react";
+import html2canvas from "html2canvas";
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 import { useWebSocket } from "@/contexts/websocket-context";
@@ -13,8 +14,9 @@ export default function Results() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [hasTriggeredConfetti, setHasTriggeredConfetti] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
 
-  const { isConnected, players } = useWebSocket();
+  const { isConnected, players, restartQuiz, leaveRoom, resetState } = useWebSocket();
 
   const roomCode = params?.code || "";
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
@@ -65,31 +67,57 @@ export default function Results() {
   }, [winner, hasTriggeredConfetti]);
 
   const handlePlayAgain = () => {
-    setLocation(`/lobby/${roomCode}`);
+    // Ask server to reset scores/answers and restart with same questions
+    if (!isConnected) {
+      toast({ title: "Connection lost", description: "Restart queued and will retry on reconnect.", });
+    } else {
+      toast({ title: "Restarting quiz", description: "Loading question 1…" });
+    }
+    restartQuiz();
+    setLocation(`/quiz/${roomCode}`, { replace: true });
   };
 
   const handleNewQuiz = () => {
-    setLocation("/");
+    toast({ title: "Leaving room", description: "Returning to home…" });
+    leaveRoom();
+    resetState();
+    setLocation("/", { replace: true });
   };
 
-  const handleShare = () => {
-    const text = `I just played QuizBattle and scored ${winner?.score || 0} points! 🎉 Can you beat me?`;
-    if (navigator.share) {
-      navigator.share({
-        title: "QuizBattle Results",
-        text: text,
-      }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(text);
-      toast({
-        title: "Results copied!",
-        description: "Share your score with friends",
+  const handleScreenshot = async () => {
+    try {
+      const container = document.querySelector("#results-container") as HTMLElement | null;
+      if (!container) {
+        toast({ title: "Error: Results not ready to capture.", description: "Please wait a moment and try again." });
+        return;
+      }
+      // Temporarily hide Play Again button (fade) but keep layout stable
+      setIsCapturing(true);
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      const canvas = await html2canvas(container, {
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: "#ffffff",
+        scale: 2,
+        logging: true,
       });
+      const dataUrl = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = "quiz-results.png";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast({ title: "Screenshot saved", description: "Downloaded PNG of your results." });
+    } catch {
+      toast({ title: "Screenshot failed, please try again.", description: "Capture could not complete." });
+    } finally {
+      setIsCapturing(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-950 via-slate-900 to-blue-950">
+    <div className="min-h-screen bg-gradient-to-br from-purple-950 via-slate-900 to-blue-950" id="results-container">
       {/* Header */}
       <div className="border-b border-white/10 bg-black/20 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -183,7 +211,7 @@ export default function Results() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button
             size="lg"
-            className="bg-gradient-to-r from-neon-purple to-neon-cyan font-semibold"
+            className={`bg-gradient-to-r from-neon-purple to-neon-cyan font-semibold transition-opacity duration-200 ${isCapturing ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
             onClick={handlePlayAgain}
             data-testid="button-play-again"
           >
@@ -206,11 +234,11 @@ export default function Results() {
             size="lg"
             variant="outline"
             className="border-white/30 bg-white/10 backdrop-blur-xl text-white hover:bg-white/20 font-semibold"
-            onClick={handleShare}
-            data-testid="button-share"
+            onClick={handleScreenshot}
+            data-testid="button-screenshot"
           >
-            <Share2 className="w-5 h-5 mr-2" />
-            Share Results
+            <Camera className="w-5 h-5 mr-2" />
+            Screenshot
           </Button>
         </div>
       </div>
