@@ -18,7 +18,7 @@
 
 ## 🖼️ Screenshots
 
-(assets/readme/1st.png)
+![home](assets/readme/1st.png)
 (assets/readme/2nd.png)
 (assets/readme/3rd.png)
 (assets/readme/4th.png)
